@@ -13,14 +13,17 @@ import Trace
 
 type State = IntMap B.ByteString
 
--- todo dup(2), dup2(2), and dup3(2) support!
-
 process :: State -> Trace -> IO State
 process oldMap Trace{..} = do
   case command of
+   -- Open file. Store file name of returning descriptor
    "open" -> do
-     let [BytesArg path,_] = args
+     let BytesArg path = head args
      return $ insert ret path oldMap
+   -- Duplicate file descriptor.
+   "dup" -> genericDup
+   "dup2" -> genericDup
+   "dup3" -> genericDup
    "read" -> do
      let [NumericArg fd', BytesArg bytes, _] = args
          Just fd = toBoundedInteger fd'
@@ -39,13 +42,18 @@ process oldMap Trace{..} = do
      putStrLn $ show bytesWritten
      return oldMap
    _ -> return oldMap -- Unknown syscall
+  where genericDup = do
+          let NumericArg oldfd' = head args
+              Just oldfd = toBoundedInteger oldfd'
+          -- Store file name to the new fd, too.
+          return $ insert ret (oldMap ! oldfd) oldMap
 
 -- |Get state-wrapped Trace processor
 getProcess :: IO (Trace -> IO ())
 getProcess = do
   ref <- newIORef $ fromList [(0, "/dev/stdin")
                              ,(1, "/dev/stdout")
-                             ,(1, "/dev/stderr")
+                             ,(2, "/dev/stderr")
                              ]
   return $ statefulWrap ref process
 
