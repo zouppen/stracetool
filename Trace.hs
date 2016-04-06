@@ -7,7 +7,7 @@ import Data.ByteString (ByteString)
 data Trace = Trace { ts      :: Scientific
                    , command :: Text
                    , args    :: [Arg]
-                   , ret     :: Integer
+                   , ret     :: Int
 } deriving (Show)
 
 data Arg = EnumArg Text

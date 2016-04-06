@@ -7,12 +7,10 @@ import qualified Data.Text.IO as T
 import Trace
 import TraceParser
 import ParserTools
-import FileTracker
 
 main = do
   hSetBuffering stdin LineBuffering
-  a <- getProcess
-  parseTracesFromHandle stdin a
+  parseTracesFromHandle stdin print
 
 -- |Shorthand for parsing given handle
 parseTracesFromHandle :: Handle -> (Trace -> IO ()) -> IO ()
