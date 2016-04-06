@@ -20,6 +20,12 @@ process oldMap Trace{..} = do
    "open" -> do
      let BytesArg path = head args
      return $ insert ret path oldMap
+   "close" -> do
+     let [NumericArg fd'] = args
+         Just fd = toBoundedInteger fd'
+     return $ if ret == 0
+              then delete fd oldMap
+              else oldMap -- Closing error in traced program
    -- Duplicate file descriptor.
    "dup" -> genericDup
    "dup2" -> genericDup
@@ -27,7 +33,7 @@ process oldMap Trace{..} = do
    "read" -> do
      let [NumericArg fd', BytesArg bytes, _] = args
          Just fd = toBoundedInteger fd'
-         path = oldMap ! fd
+         path = findWithDefault "unknown fd" fd oldMap
      B.putStr path
      putStr " < "
      putStrLn $ show bytes
@@ -35,7 +41,7 @@ process oldMap Trace{..} = do
    "write" -> do
      let [NumericArg fd', BytesArg bytesTried, _] = args
          Just fd = toBoundedInteger fd'
-         path = oldMap ! fd
+         path = findWithDefault "unknown fd" fd oldMap
          bytesWritten = B.take ret bytesTried
      B.putStr path
      putStr " > "
@@ -46,7 +52,9 @@ process oldMap Trace{..} = do
           let NumericArg oldfd' = head args
               Just oldfd = toBoundedInteger oldfd'
           -- Store file name to the new fd, too.
-          return $ insert ret (oldMap ! oldfd) oldMap
+          return $ case IM.lookup oldfd oldMap of
+            Nothing -> oldMap -- Perhaps socket dup?
+            Just path -> insert ret path oldMap
 
 -- |Get state-wrapped Trace processor
 getProcess :: IO (Trace -> IO ())
