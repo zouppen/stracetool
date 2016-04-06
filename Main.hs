@@ -4,7 +4,7 @@ import System.IO
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-import StraceParser
+import Trace
 import ParserTools
 
 main = do

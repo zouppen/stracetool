@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings #-}
-module StraceParser where
+module Trace where
 
 import Data.Attoparsec.Text
 import Data.Text (Text)
