@@ -19,6 +19,7 @@ trace = do
   skipMany " "
   "= "
   ret <- signed decimal
+  errStr <- optional errorField
   endOfLine
   return $ Trace{..}
 
@@ -36,6 +37,9 @@ bytesArg = do
   octets <- many ("\\x" >> hexadecimal)
   char '"'
   return $ pack octets
+
+-- |Take possible error message after return code
+errorField = " " >> takeTill (=='\n')
 
 -- |If trace was whole then it ends with this sequence.
 traceEnd = do

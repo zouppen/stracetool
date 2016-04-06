@@ -8,6 +8,7 @@ data Trace = Trace { ts      :: Scientific
                    , command :: Text
                    , args    :: [Arg]
                    , ret     :: Int
+                   , errStr  :: Maybe Text
 } deriving (Show)
 
 data Arg = EnumArg Text
