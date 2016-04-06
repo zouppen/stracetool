@@ -1,15 +1,16 @@
 module Main where
 
 import System.IO
-import qualified Data.ByteString as B
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 import StraceParser
 import ParserTools
 
 main = do
-  hSetBuffering stdin NoBuffering
+  hSetBuffering stdin LineBuffering
   parseTracesFromHandle stdin print
 
 -- |Shorthand for parsing given handle
 parseTracesFromHandle :: Handle -> (Trace -> IO ()) -> IO ()
-parseTracesFromHandle h = parseMany trace (B.hGetSome h 1024)
+parseTracesFromHandle h = parseMany trace traceEnd (T.hGetChunk h)
