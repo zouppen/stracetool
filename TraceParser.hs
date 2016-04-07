@@ -49,6 +49,7 @@ enumArg = takeWhile1 $ notInClass "\",{}()"
 
 -- |Parse escaped string (in strace's -xx format)
 bytesArg = do
+  optional "@"
   char '"'
   octets <- many singleByte
   char '"'
