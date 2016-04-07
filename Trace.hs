@@ -12,7 +12,10 @@ data Trace = Trace { ts      :: Scientific
 } deriving (Show)
 
 data Arg = EnumArg Text
+         | FieldArg [(Text, Arg)]
+         | CallArg Call
          | NumericArg Scientific
          | BytesArg ByteString
          deriving (Show)
 
+data Call = Call Text [Arg] deriving (Show)
