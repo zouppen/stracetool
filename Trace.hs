@@ -15,7 +15,7 @@ data Arg = EnumArg Text
          | FieldArg [(Text, Arg)]
          | CallArg Call
          | NumericArg Scientific
-         | BytesArg ByteString
+         | BytesArg ByteString Bool -- Second field is False if truncated by strace
          deriving (Show)
 
 data Call = Call Text [Arg] deriving (Show)

@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards, OverloadedStrings #-}
 module FileTracker where
 
+import Control.Monad
 import Data.IntMap.Strict as IM
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
@@ -19,7 +20,7 @@ process oldMap Trace{..} = do
   case command of
    -- Open file. Store file name of returning descriptor
    "open" -> do
-     let BytesArg path = head args
+     let BytesArg path True = head args
      return $ insert ret path oldMap
    "close" -> do
      let [NumericArg fd'] = args
@@ -30,7 +31,7 @@ process oldMap Trace{..} = do
    -- In many cases we can get target name from sockets, too.
    "connect" -> do
      return $ case args of
-               (NumericArg fd':FieldArg [("sa_family",EnumArg "AF_INET"),("sin_port",CallArg (Call "htons" [NumericArg port'])),("sin_addr",CallArg (Call "inet_addr" [BytesArg addr]))]:_) ->
+               (NumericArg fd':FieldArg [("sa_family",EnumArg "AF_INET"),("sin_port",CallArg (Call "htons" [NumericArg port'])),("sin_addr",CallArg (Call "inet_addr" [BytesArg addr True]))]:_) ->
                 let Just fd = toBoundedInteger fd'
                     Just port = toBoundedInteger port'
                     str = BC.concat ["IPv4/", addr, ":", BC.pack $ show (port :: Int)]
@@ -41,21 +42,25 @@ process oldMap Trace{..} = do
    "dup2" -> genericDup
    "dup3" -> genericDup
    "read" -> do
-     let [NumericArg fd', BytesArg bytes, _] = args
+     let [NumericArg fd', BytesArg bytes ok, _] = args
          Just fd = toBoundedInteger fd'
          path = findWithDefault (unknown fd) fd oldMap
      B.putStr path
      putStr " < "
-     putStrLn $ show bytes
+     putStr $ show bytes
+     unless ok $ putStr " (truncated)"
+     putChar '\n'
      return oldMap
    "write" -> do
-     let [NumericArg fd', BytesArg bytesTried, _] = args
+     let [NumericArg fd', BytesArg bytesTried ok, _] = args
          Just fd = toBoundedInteger fd'
          path = findWithDefault (unknown fd) fd oldMap
          bytesWritten = B.take ret bytesTried
      B.putStr path
      putStr " > "
-     putStrLn $ show bytesWritten
+     putStr $ show bytesWritten
+     unless ok $ putStr " (truncated)"
+     putChar '\n'
      return oldMap
    _ -> return oldMap -- Unknown syscall
   where genericDup = do

@@ -5,6 +5,7 @@ import Data.Text (Text)
 import Data.Scientific (Scientific)
 import Data.Attoparsec.Text
 import Data.ByteString (pack)
+import Data.Maybe (isNothing)
 import Control.Applicative
 
 import Trace
@@ -32,7 +33,7 @@ call = do
 -- |Parse all argument types, wrapping the result to one of in Args.
 arg = NumericArg <$> hexArg <|>
       NumericArg <$> scientific <|>
-      BytesArg <$> bytesArg <|>
+      bytesArg <|>
       FieldArg <$> fieldArg <|>
       CallArg <$> call <|>
       EnumArg <$> enumArg
@@ -51,7 +52,8 @@ bytesArg = do
   char '"'
   octets <- many singleByte
   char '"'
-  return $ pack octets
+  ellipsis <- optional "..."
+  return $ BytesArg (pack octets) (isNothing ellipsis)
 
 -- |Not perfect parser but takes both hex escaped and "easy" characters
 -- which may exist in more complex fields.
