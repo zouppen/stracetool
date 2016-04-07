@@ -14,4 +14,4 @@ strace -xx -ttt -s99999 -eopen,read,write,ioctl,dup,du2,dup3,connect -o TRACEFIL
 runhaskell Main.hs <TRACEFILE
 ```
 
-There is also `MainTrace.hs` which does just strace parsing. Easies debugging
+There is also `MainParser.hs` which does just strace parsing. Easies debugging
