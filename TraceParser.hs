@@ -2,6 +2,7 @@
 module TraceParser (trace, traceEnd) where
 
 import Data.Text (Text)
+import Data.Scientific (Scientific)
 import Data.Attoparsec.Text
 import Data.ByteString (pack)
 import Control.Applicative
@@ -29,11 +30,18 @@ call = do
   return $ Call command args
 
 -- |Parse all argument types, wrapping the result to one of in Args.
-arg = NumericArg <$> scientific <|>
+arg = NumericArg <$> hexArg <|>
+      NumericArg <$> scientific <|>
       BytesArg <$> bytesArg <|>
       FieldArg <$> fieldArg <|>
       CallArg <$> call <|>
       EnumArg <$> enumArg
+
+hexArg :: Parser Scientific
+hexArg = do
+  "0x"
+  a <- hexadecimal
+  return $ fromIntegral (a :: Integer)
 
 -- |Parse Enum which is a string without starting quote.
 enumArg = takeWhile1 $ notInClass "\",{}()"
